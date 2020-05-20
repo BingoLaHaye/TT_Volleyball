@@ -1,0 +1,73 @@
+---
+title: "Volleyball ETL"
+output: html_notebook
+---
+# Setup
+
+```{r import}
+# Or read in with tidytuesdayR package (https://github.com/thebioengineer/tidytuesdayR)
+
+# Either ISO-8601 date or year/week works!
+
+# Install via devtools::install_github("thebioengineer/tidytuesdayR")
+
+tuesdata <- tidytuesdayR::tt_load('2020-05-19')
+# tuesdata <- tidytuesdayR::tt_load(2020, week = 21)
+
+
+vb_matches <- tuesdata$vb_matches
+#i need some of dat memory back thank u
+#I also like less stuff in my environment 
+rm(tuesdata)
+```
+
+
+```{r libraries}
+library(tidyverse)
+```
+
+# Questions
+
+## Do winning players account for more attack points than losing players?
+
+```{r}
+vb_matches %>%
+  pivot_longer(cols = c(w_p1_tot_attacks, w_p2_tot_attacks, l_p1_tot_attacks, l_p2_tot_attacks), 
+               names_to = "attack_type", values_to = "tot_attack") %>% 
+  distinct() %>% 
+  filter(is.na(tot_attack) == FALSE) %>% 
+  mutate(is_winner = if_else(str_detect(attack_type, pattern = "^w"), true = T, false = F)) %>% 
+  group_by(is_winner) %>% 
+  summarise(avg_attacks = mean(tot_attack),
+            sum_attacks = sum(tot_attack),
+            n = n())
+```
+
+
+## Do winning **teams** account for more attacks?
+
+```{r}
+#kind want to summarise by team
+vb_matches %>% 
+  mutate(w_team_attacks = w_p1_tot_attacks + w_p2_tot_attacks,
+         l_team_attacks = l_p1_tot_attacks + l_p2_tot_attacks) %>% 
+  summarise(avg_w_attack = mean(w_team_attacks, na.rm = T),
+            avg_l_attack = mean(l_team_attacks, na.rm = T),
+            median_w_attack = median(w_team_attacks, na.rm = T),
+            median_l_attack = median(l_team_attacks, na.rm = T))
+```
+On average losing teams have more attacks
+
+## Does higher score rate equal to winning? 
+
+## Are younger people more aggressive or more defensive?
+
+```{r}
+vb_matches %>% 
+  pivot_longer(cols = c(w_p1_tot_attacks, w_p2_tot_attacks, l_p1_tot_attacks, l_p2_tot_attacks), 
+               names_to = "attack_type", values_to = "tot_attack") %>% 
+  pivot_longer(cols = c(w_p1_age, w_p2_age, l_p1_age, l_p2_age), names_to = "age_type", values_to = "player_age") %>% 
+  distinct() %>% 
+  
+```
+
